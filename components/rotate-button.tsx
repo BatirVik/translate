@@ -1,16 +1,15 @@
-import Image from "next/image";
-import arrows from "@/public/arrow-left-right.svg";
+import { Repeat } from "lucide-react";
 import { MouseEventHandler } from "react";
 
 interface Props {
   className?: string;
-  onClick?: MouseEventHandler;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
 export default function RotateButton(props: Props) {
   return (
-    <button className={props.className}>
-      <Image src={arrows} alt="Arrows" className="w-8 h-8" />
+    <button className={props.className} onClick={props.onClick}>
+      <Repeat className="text-gray-500" />
     </button>
   );
 }
