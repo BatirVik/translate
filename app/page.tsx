@@ -2,12 +2,7 @@ import { redirect } from "next/navigation";
 import InCard from "@/components/in-card";
 import OutCard from "@/components/out-card";
 import { URLSearchParams } from "url";
-import {
-  getSupportLanguges,
-  convertSourceToTargetLang,
-  convertTargetToSourceLang,
-  translate,
-} from "@/lib/translate";
+import { autoDetectLang, getSupportLanguges, translate } from "@/lib/translate";
 import FlipButton from "@/components/flip-button";
 
 interface Props {
@@ -21,7 +16,7 @@ interface Props {
 const sourceLanguages = await getSupportLanguges("source");
 const targetLanguages = await getSupportLanguges("target");
 
-const defaultSourceLang = "EN";
+const defaultSourceLang = autoDetectLang;
 const defaultTargetLang = "EN-US";
 
 export default async function Page({ searchParams }: Props) {
@@ -34,7 +29,6 @@ export default async function Page({ searchParams }: Props) {
   const isSourceLangExists = sourceLang in sourceLanguages;
   const isTargetLangExists = targetLang in targetLanguages;
   if (!isSourceLangExists || !isTargetLangExists) {
-    console.log(sourceLanguages, targetLanguages);
     const params = new URLSearchParams({
       sourceLang: isSourceLangExists ? sourceLang : defaultSourceLang,
       targetLang: isTargetLangExists ? targetLang : defaultTargetLang,
@@ -45,17 +39,40 @@ export default async function Page({ searchParams }: Props) {
     redirect(`/?${params.toString()}`);
   }
 
-  const promiseTranslatedText = translate(text, sourceLang, targetLang);
+  const promiseTranslation = translate(text, sourceLang, targetLang);
+
+  function convertSourceToTargetLang(lang: string): string {
+    if (lang === defaultSourceLang) return defaultTargetLang;
+    if (lang in targetLanguages) {
+      return lang;
+    }
+    const targetLangCode = Object.keys(targetLanguages);
+    return (
+      targetLangCode.find((c) => c.slice(0, 2) === lang) || defaultTargetLang
+    );
+  }
+
+  function convertTargetToSourceLang(lang: string): string {
+    if (lang.slice(0, 2) in sourceLanguages) {
+      return lang.slice(0, 2);
+    }
+    return defaultSourceLang;
+  }
 
   async function getRotateHref(): Promise<string> {
+    const translation = await promiseTranslation;
     const params = new URLSearchParams({
-      text: await promiseTranslatedText,
-      targetLang: convertSourceToTargetLang(sourceLang),
+      text: translation.text,
+      targetLang: convertSourceToTargetLang(translation.sourceLang),
       sourceLang: convertTargetToSourceLang(targetLang),
     });
     return `/?${params.toString()}`;
   }
 
+  async function getTranslatedText() {
+    const translation = await promiseTranslation;
+    return translation.text;
+  }
   return (
     <div className="p-4 flex-col gap-4 md:flex-row flex h-screen w-screen">
       <InCard
@@ -67,7 +84,7 @@ export default async function Page({ searchParams }: Props) {
         <FlipButton promiseHref={getRotateHref()} />
       </div>
       <OutCard
-        promiseText={promiseTranslatedText}
+        promiseText={getTranslatedText()}
         targetLang={targetLang}
         targetLanguages={targetLanguages}
       />

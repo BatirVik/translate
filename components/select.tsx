@@ -18,11 +18,11 @@ export default function Select({
   onChange,
 }: Props) {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative font", className)}>
       <select
         onChange={onChange}
         defaultValue={defaultValue}
-        className="outline-none appearance-none hover:bg-gray-100 p-1 pr-6  rounded transition"
+        className="outline-none appearance-none active:bg-gray-200 bg-gray-100 transition-colors p-1 pr-6 rounded-md w-full"
       >
         {Object.entries(options).map(([value, content], index) => (
           <option key={index} value={value}>

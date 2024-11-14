@@ -1,11 +1,13 @@
 import { getEnv } from "@/lib/config";
 import { Languages } from "@/lib/definitions";
 
+export const autoDetectLang = "DETECT";
+
 export async function translate(
   text: string,
-  sourceLang: string,
+  sourceLang: string | undefined,
   targetLang: string,
-): Promise<string> {
+): Promise<{ text: string; sourceLang: string }> {
   const url = new URL(getEnv("DEEPL_API_URL"));
   url.pathname += "/translate";
 
@@ -15,7 +17,7 @@ export async function translate(
 
   const body = JSON.stringify({
     text: [text],
-    source_lang: sourceLang,
+    source_lang: sourceLang === autoDetectLang ? null : sourceLang,
     target_lang: targetLang,
   });
 
@@ -23,15 +25,12 @@ export async function translate(
   if (resp.status !== 200) {
     throw Error(`Response: ${resp.status} | ${await resp.text()}`);
   }
-  return (await resp.json()).translations[0].text;
-}
-
-export function convertSourceToTargetLang(sourceLang: string): string {
-  return sourceLang;
-}
-
-export function convertTargetToSourceLang(targetLang: string): string {
-  return targetLang;
+  const data = await resp.json();
+  const translation = data.translations[0];
+  return {
+    text: translation.text,
+    sourceLang: translation.detected_source_language,
+  };
 }
 
 export async function getSupportLanguges(
@@ -53,6 +52,9 @@ export async function getSupportLanguges(
   const languages: Languages = {};
   for (const { language, name } of respJson) {
     languages[language] = name;
+  }
+  if (type === "source") {
+    languages[autoDetectLang] = "Auto detect";
   }
   return languages;
 }

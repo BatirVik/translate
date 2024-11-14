@@ -6,13 +6,19 @@ interface Props {
 }
 
 export default function FlipButton({ promiseHref }: Props) {
+  const button = (
+    <div className="bg-gray-100 active:bg-gray-200 p-1 rounded-md transition-colors">
+      <Repeat />
+    </div>
+  );
+
   return (
-    <Suspense fallback={<Repeat />}>
-      {promiseHref.then((href) => (
-        <a href={href}>
-          <Repeat />
-        </a>
-      ))}
-    </Suspense>
+    <div>
+      <Suspense fallback={button}>
+        {promiseHref.then((href) => (
+          <a href={href}>{button}</a>
+        ))}
+      </Suspense>
+    </div>
   );
 }

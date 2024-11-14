@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
-import SelectLang from "../select-lang";
+import SelectLang from "@/components/select-lang";
 import CardTextarea from "./textarea";
 import { Languages } from "@/lib/definitions";
+import CopyButton from "@/components/copy-button";
 
 interface Props {
   text: string;
@@ -19,6 +20,7 @@ export default function InCard(props: Props) {
           languages={props.sourceLanguages}
           searchParamName="sourceLang"
         />
+        <CopyButton text={props.text} className={"ml-auto text-gray-600"} />
       </div>
       <CardTextarea text={props.text} />
     </div>
